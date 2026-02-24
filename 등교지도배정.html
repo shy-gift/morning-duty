@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>등교지도 교사 배정</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --tiffany: #0ABAB5;
+    --tiffany-light: #81D8D0;
+    --tiffany-pale: #C8F0EE;
+    --tiffany-deep: #007B78;
+    --cream: #F8F6F2;
+    --ivory: #FDFBF8;
+    --charcoal: #2C2C2C;
+    --mid-gray: #7A7A7A;
+    --light-gray: #E8E8E8;
+    --gold: #C9A84C;
+    --gold-light: #E8D5A3;
+    --white: #FFFFFF;
+    --shadow: 0 4px 24px rgba(10,186,181,0.10);
+    --shadow-deep: 0 8px 40px rgba(10,186,181,0.18);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--cream);
+    color: var(--charcoal);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--tiffany);
+    color: var(--white);
+    padding: 28px 32px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -60px;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -30px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .header-title {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    margin-bottom: 0;
+  }
+
+  /* ── INFO BOX ── */
+  .info-box {
+    background: var(--ivory);
+    border-left: 3px solid var(--tiffany);
+    border-radius: 0 8px 8px 0;
+    margin: 20px 20px 0;
+    padding: 14px 16px;
+    font-size: 12.5px;
+    line-height: 1.9;
+    color: var(--charcoal);
+  }
+  .info-box .info-title {
+    font-weight: 500;
+    color: var(--tiffany-deep);
+    font-size: 13px;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--white);
+    border-bottom: 1px solid var(--light-gray);
+    margin: 20px 20px 0;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+  }
+  .tab {
+    flex: 1;
+    padding: 13px 8px;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    font-weight: 400;
+    color: var(--mid-gray);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    color: var(--tiffany-deep);
+    border-bottom-color: var(--tiffany);
+    font-weight: 500;
+    background: var(--tiffany-pale);
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    display: none;
+    background: var(--white);
+    margin: 0 20px 20px;
+    border-radius: 0 0 12px 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .panel.active { display: block; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--tiffany-deep);
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--tiffany-pale);
+  }
+
+  /* ── TEACHER LIST ── */
+  .teacher-input-row {
+    display: flex; gap: 8px; margin-bottom: 10px;
+  }
+  .teacher-input-row input, .teacher-input-row select {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--light-gray);
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--charcoal);
+    background: var(--ivory);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .teacher-input-row input:focus,
+  .teacher-input-row select:focus { border-color: var(--tiffany); }
+
+  .btn {
+    padding: 9px 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .btn-tiffany { background: var(--tiffany); color: var(--white); }
+  .btn-tiffany:hover { background: var(--tiffany-deep); }
+  .btn-outline { background: transparent; color: var(--tiffany); border: 1px solid var(--tiffany); }
+  .btn-outline:hover { background: var(--tiffany-pale); }
+  .btn-gold { background: var(--gold); color: var(--white); }
+  .btn-gold:hover { background: #b0922e; }
+  .btn-danger { background: #e05c5c; color: var(--white); }
+  .btn-danger:hover { background: #c04040; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+  .btn-full { width: 100%; margin-top: 8px; }
+
+  .teacher-list { margin-top: 10px; }
+  .teacher-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    background: var(--ivory);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border: 1px solid var(--light-gray);
+    font-size: 13px;
+  }
+  .teacher-name { flex: 1; font-weight: 400; }
+  .teacher-name-edit {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid var(--tiffany);
+    border-radius: 6px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--charcoal);
+    background: var(--white);
+    outline: none;
+  }
+  .bulk-area {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px 12px;
+    border: 1px solid var(--light-gray);
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--charcoal);
+    background: var(--ivory);
+    outline: none;
+    resize: vertical;
+    line-height: 1.8;
+    transition: border-color 0.2s;
+  }
+  .bulk-area:focus { border-color: var(--tiffany); }
+  .bulk-section { margin-bottom: 16px; }
+  .bulk-label {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .bulk-label span {
+    font-size: 13px; font-weight: 500; color: var(--tiffany-deep);
+  }
+  .teacher-group-title {
+    font-size: 12px; font-weight: 500; letter-spacing: 0.5px;
+    color: var(--mid-gray); margin: 12px 0 6px;
+    text-transform: uppercase;
+  }
+  .badge {
+    padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .badge-dam { background: var(--tiffany-pale); color: var(--tiffany-deep); }
+  .badge-bidam { background: var(--gold-light); color: #8a6320; }
+  .badge-team-a { background: #D4EDDA; color: #155724; font-size:9px; padding:1px 5px; border-radius:10px; }
+  .badge-team-b { background: #D1ECF1; color: #0C5460; font-size:9px; padding:1px 5px; border-radius:10px; }
+  .badge-days   { background: #E2D9F3; color: #4A235A; font-size:9px; padding:1px 5px; border-radius:10px; }
+  .assign-mode-box { background: var(--tiffany-pale); border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:12px; line-height:1.8; }
+  .assign-mode-box b { color: var(--tiffany-deep); }
+  .count-badge {
+    padding: 2px 8px; border-radius: 20px; font-size: 10px;
+    background: var(--light-gray); color: var(--mid-gray);
+  }
+
+  /* ── CALENDAR ── */
+  .month-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .month-nav .month-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 300; letter-spacing: 2px;
+    color: var(--tiffany-deep);
+  }
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .cal-header {
+    text-align: center; font-size: 10px; font-weight: 500;
+    letter-spacing: 1px; color: var(--mid-gray);
+    padding: 4px 0;
+    text-transform: uppercase;
+  }
+  .cal-header:first-child { color: #e05c5c; }
+  .cal-header:last-child { color: var(--tiffany); }
+  .cal-day {
+    background: var(--ivory);
+    border-radius: 8px;
+    min-height: 70px;
+    padding: 5px;
+    font-size: 11px;
+    border: 1px solid var(--light-gray);
+    transition: border-color 0.15s;
+    position: relative;
+    cursor: default;
+  }
+  .cal-day.empty { background: transparent; border: none; }
+  .cal-day.holiday {
+    background: #fef0f0;
+    border-color: #f5c6c6;
+    opacity: 0.7;
+  }
+  .cal-day.no-duty {
+    background: #f5f5f5;
+    border-color: var(--light-gray);
+    opacity: 0.6;
+  }
+  .cal-day.today { border-color: var(--tiffany); border-width: 2px; }
+  .cal-day .day-num {
+    font-size: 12px; font-weight: 500;
+    color: var(--charcoal);
+    margin-bottom: 3px;
+  }
+  .cal-day.sun .day-num { color: #e05c5c; }
+  .cal-day.sat .day-num { color: var(--tiffany); }
+  .cal-day .assigned {
+    font-size: 10px; line-height: 1.5;
+    color: var(--charcoal);
+  }
+  .cal-day .assigned .dam-name { color: var(--tiffany-deep); font-weight: 500; }
+  .cal-day .assigned .bidam-name { color: #8a6320; font-weight: 400; }
+  .cal-day .no-duty-label {
+    font-size: 9px; color: var(--mid-gray); margin-top: 4px;
+  }
+  .cal-day .edit-btn {
+    position: absolute; bottom: 4px; right: 4px;
+    background: var(--tiffany); color: var(--white);
+    border: none; border-radius: 4px;
+    padding: 2px 5px; font-size: 9px;
+    cursor: pointer; opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .cal-day:hover .edit-btn { opacity: 1; }
+  .cal-day .toggle-btn {
+    position: absolute; top: 4px; right: 4px;
+    background: transparent; border: none;
+    font-size: 10px; cursor: pointer; color: var(--mid-gray);
+    transition: color 0.15s;
+  }
+  .cal-day:hover .toggle-btn { color: #e05c5c; }
+  .cal-day.no-duty .toggle-btn { color: #e05c5c; }
+
+  .generate-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+
+  /* ── STATS TABLE ── */
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .stats-table th {
+    background: var(--tiffany);
+    color: var(--white);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+  }
+  .stats-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--light-gray);
+  }
+  .stats-table tr:nth-child(even) td { background: var(--tiffany-pale); }
+  .stats-table tr:last-child td { border-bottom: none; }
+  .stats-bar {
+    background: var(--light-gray);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    min-width: 60px;
+  }
+  .stats-bar-fill {
+    background: var(--tiffany);
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 360px;
+    box-shadow: var(--shadow-deep);
+  }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 300;
+    color: var(--tiffany-deep);
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+  .modal select, .modal input {
+    width: 100%; padding: 9px 12px;
+    border: 1px solid var(--light-gray);
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px; font-weight: 300;
+    color: var(--charcoal);
+    background: var(--ivory);
+    outline: none; margin-bottom: 10px;
+  }
+  .modal-label { font-size: 11px; color: var(--mid-gray); margin-bottom: 4px; display: block; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 8px; }
+  .modal-btns .btn { flex: 1; }
+
+  /* ── MISC ── */
+  .helper { font-size: 11px; color: var(--mid-gray); margin-top: 6px; line-height: 1.6; }
+  .divider { border: none; border-top: 1px solid var(--light-gray); margin: 16px 0; }
+  .flex-row { display: flex; gap: 8px; align-items: center; }
+  .label-sm { font-size: 11px; color: var(--mid-gray); letter-spacing: 0.5px; margin-bottom: 4px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--cream); }
+  ::-webkit-scrollbar-thumb { background: var(--tiffany-light); border-radius: 4px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="header-title">등교지도 교사 배정</div>
+</header>
+
+<div class="info-box">
+  <div class="info-title">📋 등교지도 안내</div>
+  담임 (08시 ~ 08시 35분)<br>
+  비담임 [08시 10분 ~ 08시 45분]<br>
+  <span style="color:var(--mid-gray)">＊ 담임선생님들은 2주당 약 1회, 비담임선생님들은 주당 1회로 계획하였습니다.</span><br>
+  <span style="color:var(--mid-gray)">＊ 학생부장 등교지도 총괄</span><br>
+  <span style="color:var(--mid-gray)">＊ 담당: 송화영 매주 월요일 등교지도 (명단엔 넣지 않았습니다.)</span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('teachers')">교사 관리</div>
+  <div class="tab" onclick="switchTab('calendar')">배정 달력</div>
+  <div class="tab" onclick="switchTab('stats')">누적 통계</div>
+</div>
+
+<!-- ══ PANEL: TEACHERS ══ -->
+<div class="panel active" id="panel-teachers">
+  <div class="section-title">배정 방식</div>
+  <div class="assign-mode-box">
+    <b>담임</b> — A팀 / B팀으로 나눠 <b>주 단위 교대</b> 배정<br>
+    <b>비담임</b> — 전체 기간 균등 순환 배정 (담임의 약 2배)<br>
+    <span style="color:var(--mid-gray);font-size:11px">✦ 교사 목록에서 선호 요일을 지정하면 해당 요일에 우선 배정됩니다.<br>※ 매주 월요일 담당자는 명단에 포함하지 마세요.</span>
+  </div>
+
+  <div class="bulk-section">
+    <div class="bulk-label">
+      <span class="badge badge-dam">담임</span>
+      <span>A팀 명단 (줄바꿈 구분)</span>
+    </div>
+    <textarea class="bulk-area" id="bulk-dam-a" placeholder="예시)
+조소연,목
+이지성,화
+이영미" style="min-height:70px"></textarea>
+    <div class="helper" style="margin:4px 0 6px">선호 요일 지정: 이름,요일 (예: 조소연,목) — 생략 가능</div>
+    <button class="btn btn-tiffany btn-full" onclick="bulkAddDam('A')">A팀 등록</button>
+  </div>
+
+  <div class="bulk-section">
+    <div class="bulk-label">
+      <span class="badge badge-dam">담임</span>
+      <span>B팀 명단 (줄바꿈 구분)</span>
+    </div>
+    <textarea class="bulk-area" id="bulk-dam-b" placeholder="예시)
+곽민경,월
+황정심,수
+박세라" style="min-height:70px"></textarea>
+    <button class="btn btn-tiffany btn-full" onclick="bulkAddDam('B')">B팀 등록</button>
+  </div>
+
+  <div class="bulk-section">
+    <div class="bulk-label">
+      <span class="badge badge-bidam">비담임</span>
+      <span>비담임 교사 명단 (줄바꿈으로 구분)</span>
+    </div>
+    <textarea class="bulk-area" id="bulk-bidam" placeholder="예시)
+정용채,화
+이민수,월
+최윤영,목
+정다영,금
+백준기,수" style="min-height:100px"></textarea>
+    <div class="helper" style="margin:4px 0 6px">선호 요일 지정: 이름,요일 (예: 정용채,화) — 생략 가능</div>
+    <button class="btn btn-gold btn-full" onclick="bulkAddBidam()">비담임 등록</button>
+  </div>
+
+  <hr class="divider">
+  <div class="section-title">등록된 교사 목록</div>
+  <div class="helper" style="margin-bottom:8px">✏️ 이름 클릭 시 수정 가능합니다.</div>
+  <div class="teacher-list" id="teacher-list"></div>
+
+  <hr class="divider">
+  <div class="section-title">데이터 관리</div>
+  <div class="flex-row" style="flex-wrap:wrap">
+    <button class="btn btn-outline" onclick="exportData()">💾 저장 (JSON)</button>
+    <button class="btn btn-outline" onclick="exportExcel()" style="background:#E8F5E9;border-color:#388E3C;color:#388E3C">📊 엑셀 다운로드</button>
+    <button class="btn btn-outline" onclick="openLookup()" style="background:#EDE7F6;border-color:#7B1FA2;color:#7B1FA2">👁 교사 조회 앱</button>
+  </div>
+  <div class="flex-row" style="margin-top:8px">
+    <button class="btn btn-danger" style="flex:1" data-action="reset">🗑 전체 초기화</button>
+    <button class="btn btn-outline" style="flex:1;display:none" id="restore-btn" data-action="restore">↩ 초기화 복구</button>
+  </div>
+  <div id="reset-notice" style="display:none;font-size:11px;color:#e05c5c;margin-top:6px">
+    초기화되었습니다. 복구 버튼으로 되돌릴 수 있습니다.
+  </div>
+</div>
+
+<!-- ══ PANEL: CALENDAR ══ -->
+<div class="panel" id="panel-calendar">
+  <div class="month-nav">
+    <button class="btn btn-outline btn-sm" onclick="prevMonth()">◀</button>
+    <div class="month-label" id="month-label"></div>
+    <button class="btn btn-outline btn-sm" onclick="nextMonth()">▶</button>
+  </div>
+
+  <div class="generate-row">
+    <button class="btn btn-tiffany" onclick="autoAssign()">✨ 자동 배정</button>
+    <button class="btn btn-gold" onclick="clearMonth()">이달 초기화</button>
+  </div>
+  <div class="generate-row" style="margin-top:6px">
+    <button class="btn btn-outline" id="btn-equalize" onclick="openEqualizeModal()" style="flex:1;background:var(--ivory);border:1.5px solid var(--tiffany);color:var(--tiffany-deep);font-weight:600" disabled>
+      ⚖️ 균등 배치
+    </button>
+  </div>
+  <div id="equalize-status" style="font-size:11px;color:var(--mid-gray);margin-bottom:6px;display:none"></div>
+
+  <div class="helper" style="margin-bottom:10px">
+    ✦ 날짜 우측 상단 × 버튼: 등교지도 없는 날 설정 / 해제<br>
+    ✦ 날짜 우측 하단 수정 버튼: 배정 교사 수기 변경
+  </div>
+
+  <div class="calendar-grid" id="cal-headers">
+    <div class="cal-header">일</div>
+    <div class="cal-header">월</div>
+    <div class="cal-header">화</div>
+    <div class="cal-header">수</div>
+    <div class="cal-header">목</div>
+    <div class="cal-header">금</div>
+    <div class="cal-header">토</div>
+  </div>
+  <div class="calendar-grid" id="calendar"></div>
+</div>
+
+<!-- ══ PANEL: STATS ══ -->
+<div class="panel" id="panel-stats">
+  <div class="section-title">연간 누적 통계</div>
+  <div style="font-size:12px;color:var(--mid-gray);margin-bottom:12px">
+    전체 배정 이력 기준 누적 횟수입니다.
+  </div>
+  <div id="stats-container"></div>
+</div>
+
+<!-- ══ MODAL: EDIT ASSIGNMENT ══ -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-date-title">배정 수정</div>
+    <label class="modal-label">담임 교사</label>
+    <select id="modal-dam"></select>
+    <label class="modal-label">비담임 교사</label>
+    <select id="modal-bidam"></select>
+    <div class="modal-btns">
+      <button class="btn btn-tiffany" onclick="saveEdit()">저장</button>
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 균등 배치 기간 선택 모달 ══ -->
+<div class="modal-overlay" id="equalize-modal">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-title">⚖️ 균등 배치 기간 설정</div>
+    <div style="font-size:12px;color:var(--mid-gray);margin-bottom:14px;line-height:1.6">
+      선택한 기간의 배정을 분석해<br>
+      담임·비담임이 각각 균등해지도록 이름을 교체합니다.
+    </div>
+    <label class="modal-label">시작 월</label>
+    <select id="eq-from" style="width:100%;padding:9px 12px;border:1px solid var(--light-gray);border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:13px;background:var(--ivory);margin-bottom:10px"></select>
+    <label class="modal-label">종료 월</label>
+    <select id="eq-to" style="width:100%;padding:9px 12px;border:1px solid var(--light-gray);border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:13px;background:var(--ivory);margin-bottom:4px"></select>
+    <div id="eq-preview" style="font-size:11px;color:var(--mid-gray);margin:8px 0 14px;min-height:16px"></div>
+    <div class="modal-btns">
+      <button class="btn btn-tiffany" onclick="runEqualize()">균등 배치 실행</button>
+      <button class="btn btn-outline" onclick="closeEqualizeModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════
+//  STATE
+// ══════════════════════════════
+let state = {
+  teachers: [],
+  assignments: {},  // "YYYY-MM-DD": {dam: name, bidam: name} | "off"
+};
+
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth(); // 0-based
+let editingDate = null;
+
+const STORAGE_KEY = 'morning_duty_v1';
+
+// ── Load from localStorage ──
+function load() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try { state = JSON.parse(raw); } catch(e) {}
+  }
+}
+function save() {
+  state._savedAt = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// ══════════════════════════════
+//  TABS
+// ══════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'calendar') renderCalendar();
+  if (tab === 'stats') renderStats();
+}
+
+// ══════════════════════════════
+//  TEACHERS
+// ══════════════════════════════
+function bulkAddDam(team) {
+  const areaId = team === 'A' ? 'bulk-dam-a' : 'bulk-dam-b';
+  const text = document.getElementById(areaId).value.trim();
+  if (!text) return;
+  const DAY_MAP = {'월':1,'화':2,'수':3,'목':4,'금':5};
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  let added = 0, skipped = 0;
+  lines.forEach(line => {
+    const parts = line.split(',').map(p => p.trim());
+    const name = parts[0];
+    const prefDay = parts[1] ? (DAY_MAP[parts[1]] || 0) : 0;
+    if (!name) return;
+    if (state.teachers.find(t => t.name === name)) { skipped++; return; }
+    state.teachers.push({ name, type: '담임', team, prefDay });
+    added++;
+  });
+  document.getElementById(areaId).value = '';
+  save();
+  renderTeachers();
+  alert(`${team}팀 ${added}명 등록 완료${skipped > 0 ? ` (${skipped}명 중복 제외)` : ''}`);
+}
+
+function bulkAddBidam() {
+  const text = document.getElementById('bulk-bidam').value.trim();
+  if (!text) return;
+  const DAY_MAP = {'월':1,'화':2,'수':3,'목':4,'금':5};
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  let added = 0, skipped = 0;
+  lines.forEach(line => {
+    const parts = line.split(',').map(p => p.trim());
+    const name = parts[0];
+    const prefDay = parts[1] ? (DAY_MAP[parts[1]] || 0) : 0;
+    if (!name) return;
+    if (state.teachers.find(t => t.name === name)) { skipped++; return; }
+    state.teachers.push({ name, type: '비담임', prefDay });
+    added++;
+  });
+  document.getElementById('bulk-bidam').value = '';
+  save();
+  renderTeachers();
+  alert(`비담임 ${added}명 등록 완료${skipped > 0 ? ` (${skipped}명 중복 제외)` : ''}`);
+}
+
+function startEditName(idx) {
+  const item = document.getElementById(`teacher-item-${idx}`);
+  if (!item) return;
+  const nameSpan = item.querySelector('[data-edit]');
+  if (!nameSpan) return;
+  const currentName = state.teachers[idx].name;
+  const input = document.createElement('input');
+  input.className = 'teacher-name-edit';
+  input.id = `edit-inp-${idx}`;
+  input.value = currentName;
+  input.addEventListener('blur', () => finishEditName(idx));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') finishEditName(idx);
+    if (e.key === 'Escape') renderTeachers();
+  });
+  nameSpan.replaceWith(input);
+  input.focus();
+  input.select();
+}
+
+function finishEditName(idx) {
+  const inp = document.getElementById(`edit-inp-${idx}`);
+  if (!inp) return;
+  const newName = inp.value.trim();
+  const oldName = state.teachers[idx].name;
+  if (!newName || newName === oldName) { renderTeachers(); return; }
+  if (state.teachers.find((t,i) => t.name === newName && i !== idx)) {
+    alert('이미 존재하는 이름입니다.'); inp.focus(); return;
+  }
+  // Update assignments too
+  Object.keys(state.assignments).forEach(key => {
+    const a = state.assignments[key];
+    if (a && typeof a === 'object') {
+      if (a.dam === oldName) a.dam = newName;
+      if (a.bidam === oldName) a.bidam = newName;
+    }
+  });
+  state.teachers[idx].name = newName;
+  save();
+  renderTeachers();
+}
+
+function removeTeacher(idx) {
+  const teacher = state.teachers[idx];
+  if (!teacher) return;
+  state.teachers.splice(idx, 1);
+  save();
+  renderTeachers();
+}
+
+function renderTeachers() {
+  const list = document.getElementById('teacher-list');
+  if (!state.teachers.length) {
+    list.innerHTML = '<div class="helper" style="text-align:center;padding:20px">아직 등록된 교사가 없습니다.</div>';
+    return;
+  }
+  const counts = getCounts();
+  const DAY_NAMES = {1:'월',2:'화',3:'수',4:'목',5:'금'};
+  const damA  = state.teachers.map((t,i) => ({...t,i})).filter(t => t.type==='담임' && t.team==='A');
+  const damB  = state.teachers.map((t,i) => ({...t,i})).filter(t => t.type==='담임' && t.team==='B');
+  const bidam = state.teachers.map((t,i) => ({...t,i})).filter(t => t.type==='비담임');
+  bidam.sort((a,b) => (a.day||0) - (b.day||0));
+
+  const DAY_OPTIONS = ['없음','월','화','수','목','금'];
+  const renderItem = (t, badgeCls, extra) => `
+    <div class="teacher-item" id="teacher-item-${t.i}">
+      <span class="teacher-name" data-edit="${t.i}" title="클릭하여 이름 수정" style="cursor:pointer">${t.name}</span>
+      <span class="badge ${badgeCls}">${extra}</span>
+      <select class="pref-day-sel" data-pref="${t.i}"
+        style="font-size:11px;padding:2px 4px;border:1px solid var(--light-gray);
+               border-radius:6px;background:var(--ivory);cursor:pointer;color:var(--tiffany-deep);font-weight:500">
+        ${DAY_OPTIONS.map((d,i) => `<option value="${i}" ${(t.prefDay||0)===i?'selected':''}>${d}</option>`).join('')}
+      </select>
+      <span class="count-badge">${counts[t.name] || 0}회</span>
+      <button class="btn btn-danger btn-sm" data-del="${t.i}">삭제</button>
+    </div>`;
+
+  let html = '';
+  if (damA.length) {
+    html += `<div class="teacher-group-title">담임 A팀 (${damA.length}명) — 홀수주 배정</div>`;
+    html += damA.map(t => renderItem(t, 'badge-dam', 'A팀')).join('');
+  }
+  if (damB.length) {
+    html += `<div class="teacher-group-title">담임 B팀 (${damB.length}명) — 짝수주 배정</div>`;
+    html += damB.map(t => renderItem(t, 'badge-dam', 'B팀')).join('');
+  }
+  if (bidam.length) {
+    html += `<div class="teacher-group-title">비담임 교사 (${bidam.length}명) — 2주 2회 균등 배정</div>`;
+    html += bidam.map(t => renderItem(t, 'badge-bidam', '비담임')).join('');
+  }
+  list.innerHTML = html || '<div class="helper" style="text-align:center;padding:20px">아직 등록된 교사가 없습니다.</div>';
+}
+
+// ── 이벤트 위임: 모든 data-action/data-del/data-edit 한 곳에서 처리 ──
+document.addEventListener('click', function(e) {
+  if (e.target.matches('[data-del]')) {
+    const idx = parseInt(e.target.getAttribute('data-del'));
+    removeTeacher(idx);
+    return;
+  }
+  if (e.target.matches('[data-edit]')) {
+    const idx = parseInt(e.target.getAttribute('data-edit'));
+    startEditName(idx);
+    return;
+  }
+  const action = e.target.getAttribute('data-action');
+  if (action === 'reset')   { resetAll();   return; }
+  if (action === 'restore') { restoreAll(); return; }
+});
+
+// ══════════════════════════════
+//  CALENDAR
+// ══════════════════════════════
+function renderCalendar() {
+  const label = document.getElementById('month-label');
+  label.textContent = `${currentYear}년 ${currentMonth + 1}월`;
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const grid = document.getElementById('calendar');
+  let html = '';
+
+  // Empty cells
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(currentYear, currentMonth, d);
+    const dow = date.getDay();
+    const key = dateKey(currentYear, currentMonth, d);
+    const asgn = state.assignments[key];
+    const isOff = asgn === 'off';
+    const isToday = key === todayStr;
+    const isWeekend = dow === 0 || dow === 6;
+
+    let cls = 'cal-day';
+    if (dow === 0) cls += ' sun';
+    if (dow === 6) cls += ' sat';
+    if (isOff) cls += ' no-duty';
+    if (isToday) cls += ' today';
+
+    let inner = `<div class="day-num">${d}</div>`;
+    inner += `<button class="toggle-btn" title="등교지도 없는 날 설정/해제" onclick="toggleOff('${key}')">✕</button>`;
+
+
+    if (isOff) {
+      inner += `<div class="no-duty-label">등교지도 없음</div>`;
+    } else if (asgn && typeof asgn === 'object') {
+      inner += `<div class="assigned">
+        ${asgn.dam ? `<div class="dam-name">▸ ${asgn.dam}</div>` : ''}
+        ${asgn.bidam ? `<div class="bidam-name">▸ ${asgn.bidam}</div>` : ''}
+        ${asgn.bidam2 ? `<div class="bidam-name">▸ ${asgn.bidam2}</div>` : ''}
+      </div>`;
+      if (!isWeekend) {
+        inner += `<button class="edit-btn" onclick="openEdit('${key}')">수정</button>`;
+      }
+    } else if (!isWeekend) {
+      inner += `<button class="edit-btn" onclick="openEdit('${key}')">배정</button>`;
+    }
+
+    html += `<div class="${cls}">${inner}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function prevMonth() {
+  currentMonth--;
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+}
+function nextMonth() {
+  currentMonth++;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  renderCalendar();
+}
+
+function toggleOff(key) {
+  if (state.assignments[key] === 'off') {
+    delete state.assignments[key];
+  } else {
+    state.assignments[key] = 'off';
+  }
+  save();
+  renderCalendar();
+}
+
+// ══════════════════════════════
+//  AUTO ASSIGN
+// ══════════════════════════════
+// 이달 배정(off 제외)만 삭제하는 공통 함수
+function deleteMonthAssignments() {
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = dateKey(currentYear, currentMonth, d);
+    if (state.assignments[key] && state.assignments[key] !== 'off') {
+      delete state.assignments[key];
+    }
+  }
+}
+
+function autoAssign() {
+  const dams   = state.teachers.filter(t => t.type === '담임');
+  const bidams = state.teachers.filter(t => t.type === '비담임');
+  if (!dams.length && !bidams.length) { alert('교사를 먼저 등록해주세요.'); return; }
+
+  deleteMonthAssignments();
+
+  const teamA = dams.filter(t => t.team === 'A');
+  const teamB = dams.filter(t => t.team === 'B');
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  // 평일 목록 (off 제외)
+  const allDays = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(currentYear, currentMonth, d);
+    const dow  = date.getDay(); // 0=일,1=월~5=금,6=토
+    const key  = dateKey(currentYear, currentMonth, d);
+    if (dow === 0 || dow === 6) continue;
+    if (state.assignments[key] === 'off') continue;
+    allDays.push({ d, date, key, dow });
+  }
+
+  // 평일을 주 단위(최대 5일씩)로 분리
+  // 월요일 시작이 아닐 수 있으므로 그냥 5개씩 묶음
+  const weeks = [];
+  for (let i = 0; i < allDays.length; i += 5) {
+    weeks.push(allDays.slice(i, i + 5));
+  }
+
+  // 담임 팀 교대: state.lastTeam 이어받기
+  let currentTeam  = state.lastTeam || 'A';
+  // 2주 블록 카운터: state.weekCount 이어받기
+  let weekCount    = state.weekCount || 0;
+  // 누적 횟수 (다른 달 포함)
+  const cnt = getCounts();
+
+  // 2주 블록 내 담임 사용 현황
+  let damBiweekUsed = new Set(state.damBiweekUsed || []);
+
+  // 요일 우선, 누적 최소로 1명 선택 (이번 기간 이미 나온 사람 제외)
+  function pickOne(pool, dow, usedThisPeriod, cntMap) {
+    let avail = pool.filter(t => !usedThisPeriod.has(t.name));
+    if (!avail.length) avail = [...pool];
+    // 선호 요일 맞는 사람 우선
+    const pref = avail.filter(t => (t.prefDay || 0) === dow);
+    const candidates = pref.length ? pref : avail;
+    candidates.sort((a, b) => (cntMap[a.name] || 0) - (cntMap[b.name] || 0));
+    return candidates[0];
+  }
+
+  for (const week of weeks) {
+    const activeTeam = currentTeam === 'A' ? teamA : teamB;
+    const bidamWeekUsed = new Set();
+
+    for (const day of week) {
+      // 담임 배정
+      let damPick = '';
+      if (activeTeam.length) {
+        const t = pickOne(activeTeam, day.dow, damBiweekUsed, cnt);
+        damPick = t.name;
+        damBiweekUsed.add(damPick);
+        cnt[damPick] = (cnt[damPick] || 0) + 1;
+      }
+
+      // 비담임 배정
+      let bidamPick = '';
+      if (bidams.length) {
+        const t = pickOne(bidams, day.dow, bidamWeekUsed, cnt);
+        bidamPick = t.name;
+        bidamWeekUsed.add(bidamPick);
+        cnt[bidamPick] = (cnt[bidamPick] || 0) + 1;
+      }
+
+      state.assignments[day.key] = { dam: damPick, bidam: bidamPick };
+    }
+
+    weekCount++;
+    // 2주(2번)마다 팀 교대 + 담임 블록 초기화
+    if (weekCount % 2 === 0) {
+      currentTeam   = currentTeam === 'A' ? 'B' : 'A';
+      damBiweekUsed = new Set();
+    }
+  }
+
+  // 다음 달을 위해 저장
+  state.lastTeam      = currentTeam;
+  state.weekCount     = weekCount;
+  state.damBiweekUsed = [...damBiweekUsed];
+
+  save();
+  renderCalendar();
+  updateEqualizeBtn();
+}
+function getWeekNumber(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const wk1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - wk1) / 86400000 - 3 + (wk1.getDay() + 6) % 7) / 7);
+}
+function clearMonth() {
+  deleteMonthAssignments();
+  save();
+  renderCalendar();
+  updateEqualizeBtn();
+}
+
+// ══════════════════════════════
+//  EDIT MODAL
+// ══════════════════════════════
+function openEdit(key) {
+  editingDate = key;
+  const [y,m,d] = key.split('-');
+  document.getElementById('modal-date-title').textContent =
+    `${+y}년 ${+m}월 ${+d}일 배정 수정`;
+
+  const asgn = state.assignments[key] || {};
+  const allTeachers = state.teachers;
+
+  const damSel   = document.getElementById('modal-dam');
+  const bidamSel = document.getElementById('modal-bidam');
+
+  // 담임/비담임 구분선 포함 전체 교사 목록 생성
+  function buildOptions(sel, currentVal) {
+    const dams   = allTeachers.filter(t => t.type === '담임');
+    const bidams = allTeachers.filter(t => t.type === '비담임');
+    let html = `<option value="">-- 선택 안 함 --</option>`;
+    if (dams.length) {
+      html += `<optgroup label="── 담임 ──">` +
+        dams.map(t => `<option value="${t.name}" ${currentVal===t.name?'selected':''}>${t.name}</option>`).join('') +
+        `</optgroup>`;
+    }
+    if (bidams.length) {
+      html += `<optgroup label="── 비담임 ──">` +
+        bidams.map(t => `<option value="${t.name}" ${currentVal===t.name?'selected':''}>${t.name}</option>`).join('') +
+        `</optgroup>`;
+    }
+    sel.innerHTML = html;
+  }
+
+  buildOptions(damSel,   asgn.dam   || '');
+  buildOptions(bidamSel, asgn.bidam || '');
+
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function saveEdit() {
+  const dam = document.getElementById('modal-dam').value;
+  const bidam = document.getElementById('modal-bidam').value;
+  if (dam || bidam) {
+    state.assignments[editingDate] = { dam: dam || '', bidam: bidam || '' };
+  } else {
+    delete state.assignments[editingDate];
+  }
+  save();
+  closeModal();
+  renderCalendar();
+  updateEqualizeBtn();
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editingDate = null;
+}
+
+// ══════════════════════════════
+//  STATS
+// ══════════════════════════════
+function getCounts() {
+  const counts = {};
+  state.teachers.forEach(t => counts[t.name] = 0);
+  Object.values(state.assignments).forEach(a => {
+    if (a && typeof a === 'object') {
+      if (a.dam) counts[a.dam] = (counts[a.dam] || 0) + 1;
+      if (a.bidam) counts[a.bidam] = (counts[a.bidam] || 0) + 1;
+    }
+  });
+  return counts;
+}
+
+// ── 균등 배치 ──
+function openEqualizeModal() {
+  // 배정된 달 목록 수집
+  const months = [...new Set(
+    Object.keys(state.assignments)
+      .filter(k => state.assignments[k] && typeof state.assignments[k] === 'object')
+      .map(k => k.slice(0, 7))  // "YYYY-MM"
+  )].sort();
+
+  if (!months.length) { alert('배정된 데이터가 없습니다.'); return; }
+
+  const fromSel = document.getElementById('eq-from');
+  const toSel   = document.getElementById('eq-to');
+
+  const opts = months.map(mk => {
+    const [y, m] = mk.split('-');
+    return `<option value="${mk}">${+y}년 ${+m}월</option>`;
+  }).join('');
+
+  fromSel.innerHTML = opts;
+  toSel.innerHTML   = opts;
+  toSel.selectedIndex = months.length - 1;  // 기본: 마지막 달
+
+  updateEqPreview();
+  fromSel.onchange = updateEqPreview;
+  toSel.onchange   = updateEqPreview;
+
+  document.getElementById('equalize-modal').classList.add('open');
+}
+
+function updateEqPreview() {
+  const from = document.getElementById('eq-from').value;
+  const to   = document.getElementById('eq-to').value;
+  const prev = document.getElementById('eq-preview');
+
+  if (from > to) {
+    prev.style.color = '#e05c5c';
+    prev.textContent = '⚠️ 시작 월이 종료 월보다 늦습니다.';
+    return;
+  }
+
+  // 해당 기간 배정일 수 & 교사별 횟수 미리보기
+  const keys = Object.keys(state.assignments)
+    .filter(k => {
+      const mk = k.slice(0, 7);
+      return mk >= from && mk <= to && state.assignments[k] && typeof state.assignments[k] === 'object';
+    });
+
+  const dams   = state.teachers.filter(t => t.type === '담임');
+  const bidams = state.teachers.filter(t => t.type === '비담임');
+
+  // 기간 내 횟수 계산
+  const cnt = {};
+  state.teachers.forEach(t => { cnt[t.name] = 0; });
+  keys.forEach(k => {
+    const a = state.assignments[k];
+    if (a.dam)   cnt[a.dam]   = (cnt[a.dam]   || 0) + 1;
+    if (a.bidam) cnt[a.bidam] = (cnt[a.bidam] || 0) + 1;
+  });
+
+  const damVals   = dams.map(t => cnt[t.name] || 0);
+  const bidamVals = bidams.map(t => cnt[t.name] || 0);
+  const dMin = Math.min(...damVals),   dMax = Math.max(...damVals);
+  const bMin = Math.min(...bidamVals), bMax = Math.max(...bidamVals);
+
+  prev.style.color = 'var(--mid-gray)';
+  prev.textContent = `배정일 ${keys.length}일 — 담임 ${dMin}~${dMax}회 / 비담임 ${bMin}~${bMax}회`;
+}
+
+function closeEqualizeModal() {
+  document.getElementById('equalize-modal').classList.remove('open');
+}
+
+function runEqualize() {
+  const from = document.getElementById('eq-from').value;
+  const to   = document.getElementById('eq-to').value;
+  if (from > to) { alert('시작 월이 종료 월보다 늦습니다.'); return; }
+
+  closeEqualizeModal();
+  equalizeAssign(from, to);
+}
+
+function equalizeAssign(fromMk, toMk) {
+  const dams   = state.teachers.filter(t => t.type === '담임');
+  const bidams = state.teachers.filter(t => t.type === '비담임');
+  if (!dams.length && !bidams.length) return;
+
+  // 기간 내 배정일 키 목록
+  const assignedDates = Object.keys(state.assignments)
+    .filter(k => {
+      const mk = k.slice(0, 7);
+      return mk >= fromMk && mk <= toMk &&
+             state.assignments[k] && typeof state.assignments[k] === 'object';
+    })
+    .sort();
+
+  if (!assignedDates.length) {
+    alert('해당 기간에 배정된 데이터가 없습니다.');
+    return;
+  }
+
+  // ── 기간 내 횟수 계산 함수 ──
+  function getPeriodCounts() {
+    const c = {};
+    state.teachers.forEach(t => { c[t.name] = 0; });
+    assignedDates.forEach(k => {
+      const a = state.assignments[k];
+      if (a.dam)   c[a.dam]   = (c[a.dam]   || 0) + 1;
+      if (a.bidam) c[a.bidam] = (c[a.bidam] || 0) + 1;
+    });
+    return c;
+  }
+
+  // ── 목표 횟수 계산 ──
+  // 비담임이 담임의 2배가 되도록 + 각 그룹 내 균등
+  // 기간 내 총 배정일 = damTotal = bidamTotal (매일 1담임 + 1비담임)
+  // 담임 목표 = 총배정일 / 담임수
+  // 비담임 목표 = 총배정일 / 비담임수
+  // → 비담임수 = 담임수/2 이면 비담임이 2배
+  const cnt0 = getPeriodCounts();
+  const damTotal   = dams.reduce((s, t) => s + (cnt0[t.name] || 0), 0);
+  const bidamTotal = bidams.reduce((s, t) => s + (cnt0[t.name] || 0), 0);
+  const damTarget   = damTotal   / dams.length;
+  const bidamTarget = bidamTotal / bidams.length;
+
+  let changed = 0;
+  const maxIter = (dams.length + bidams.length) * 30;
+
+  for (let iter = 0; iter < maxIter; iter++) {
+    const cnt2 = getPeriodCounts();
+
+    // 담임: 목표 기준 초과/미달
+    const dOver  = [...dams].filter(t => (cnt2[t.name]||0) > Math.ceil(damTarget))
+                            .sort((a,b) => (cnt2[b.name]||0)-(cnt2[a.name]||0));
+    const dUnder = [...dams].filter(t => (cnt2[t.name]||0) < Math.floor(damTarget))
+                            .sort((a,b) => (cnt2[a.name]||0)-(cnt2[b.name]||0));
+
+    // 비담임: 목표 기준 초과/미달
+    const bOver  = [...bidams].filter(t => (cnt2[t.name]||0) > Math.ceil(bidamTarget))
+                              .sort((a,b) => (cnt2[b.name]||0)-(cnt2[a.name]||0));
+    const bUnder = [...bidams].filter(t => (cnt2[t.name]||0) < Math.floor(bidamTarget))
+                              .sort((a,b) => (cnt2[a.name]||0)-(cnt2[b.name]||0));
+
+    if (!dOver.length && !bOver.length) break;
+
+    let swapped = false;
+
+    // 담임 교체
+    for (const over of dOver) {
+      if (!dUnder.length) break;
+      const under = dUnder[0];
+      for (const key of assignedDates) {
+        const a = state.assignments[key];
+        if (a.dam === over.name && a.bidam !== under.name) {
+          a.dam = under.name;
+          changed++;
+          swapped = true;
+          break;
+        }
+      }
+      if (swapped) break;
+    }
+
+    if (!swapped) {
+      // 비담임 교체
+      for (const over of bOver) {
+        if (!bUnder.length) break;
+        const under = bUnder[0];
+        for (const key of assignedDates) {
+          const a = state.assignments[key];
+          if (a.bidam === over.name && a.dam !== under.name) {
+            a.bidam = under.name;
+            changed++;
+            swapped = true;
+            break;
+          }
+        }
+        if (swapped) break;
+      }
+    }
+
+    if (!swapped) break;
+  }
+
+  // 결과 표시
+  const finalCnt  = getPeriodCounts();
+  const damVals   = dams.map(t => finalCnt[t.name]   || 0);
+  const bidamVals = bidams.map(t => finalCnt[t.name] || 0);
+  const dMin = Math.min(...damVals),   dMax = Math.max(...damVals);
+  const bMin = Math.min(...bidamVals), bMax = Math.max(...bidamVals);
+
+  const [fy, fm] = fromMk.split('-');
+  const [ty, tm] = toMk.split('-');
+  const rangeStr = fromMk === toMk
+    ? `${+fy}년 ${+fm}월`
+    : `${+fy}년 ${+fm}월 ~ ${+ty}년 ${+tm}월`;
+
+  const statusEl = document.getElementById('equalize-status');
+  statusEl.style.display = 'block';
+
+  if (changed > 0) {
+    statusEl.style.color = 'var(--tiffany-deep)';
+    statusEl.innerHTML =
+      `✅ <b>${rangeStr}</b> ${changed}건 조정 — 담임 ${dMin}~${dMax}회 / 비담임 ${bMin}~${bMax}회`;
+    save();
+    renderCalendar();
+    updateEqualizeBtn();
+  } else {
+    statusEl.style.color = 'var(--mid-gray)';
+    statusEl.innerHTML =
+      `이미 균등합니다 (${rangeStr}) — 담임 ${dMin}~${dMax}회 / 비담임 ${bMin}~${bMax}회`;
+  }
+}
+
+
+// 균등 배치 버튼 활성화 여부 판단
+function updateEqualizeBtn() {
+  const btn = document.getElementById('btn-equalize');
+  const statusEl = document.getElementById('equalize-status');
+  if (!btn) return;
+
+  const dams   = state.teachers.filter(t => t.type === '담임');
+  const bidams = state.teachers.filter(t => t.type === '비담임');
+  const hasAssignments = Object.values(state.assignments)
+    .some(a => a && typeof a === 'object' && (a.dam || a.bidam));
+
+  if (!hasAssignments || (!dams.length && !bidams.length)) {
+    btn.disabled = true;
+    statusEl.style.display = 'none';
+    return;
+  }
+
+  const cnt = getCounts();
+
+  // 담임/비담임 각각 불균등 여부 체크
+  function isUnequal(pool) {
+    if (pool.length < 2) return false;
+    const vals = pool.map(t => cnt[t.name] || 0);
+    return Math.max(...vals) - Math.min(...vals) > 1;
+  }
+
+  const needsEq = isUnequal(dams) || isUnequal(bidams);
+  btn.disabled = !needsEq;
+  btn.style.opacity = needsEq ? '1' : '0.5';
+
+  if (needsEq) {
+    const damVals   = dams.map(t => cnt[t.name] || 0);
+    const bidamVals = bidams.map(t => cnt[t.name] || 0);
+    const parts = [];
+    if (dams.length > 1)   parts.push(`담임 ${Math.min(...damVals)}~${Math.max(...damVals)}회`);
+    if (bidams.length > 1) parts.push(`비담임 ${Math.min(...bidamVals)}~${Math.max(...bidamVals)}회`);
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#c0392b';
+    statusEl.textContent = `⚠️ 불균등 감지: ${parts.join(' / ')}`;
+  } else {
+    if (hasAssignments) {
+      const damVals   = dams.map(t => cnt[t.name] || 0);
+      const bidamVals = bidams.map(t => cnt[t.name] || 0);
+      statusEl.style.display = 'block';
+      statusEl.style.color = 'var(--mid-gray)';
+      statusEl.textContent = dams.length && bidams.length
+        ? `담임 ${Math.min(...damVals)}~${Math.max(...damVals)}회 / 비담임 ${Math.min(...bidamVals)}~${Math.max(...bidamVals)}회`
+        : '';
+    }
+  }
+}
+
+
+function renderStats() {
+  const counts = getCounts();
+  const container = document.getElementById('stats-container');
+  if (!state.teachers.length) {
+    container.innerHTML = '<div class="helper" style="text-align:center;padding:20px">교사 명단을 먼저 등록해주세요.</div>';
+    return;
+  }
+
+  const sorted = [...state.teachers].sort((a,b) => (counts[b.name]||0) - (counts[a.name]||0));
+  const max = Math.max(...sorted.map(t => counts[t.name]||0), 1);
+
+  let html = `<table class="stats-table">
+    <thead><tr><th>이름</th><th>구분</th><th>횟수</th><th>비율</th></tr></thead>
+    <tbody>`;
+  sorted.forEach(t => {
+    const cnt = counts[t.name] || 0;
+    const pct = Math.round((cnt / max) * 100);
+    html += `<tr>
+      <td style="font-weight:500">${t.name}</td>
+      <td><span class="badge ${t.type==='담임'?'badge-dam':'badge-bidam'}">${t.type}</span></td>
+      <td style="font-weight:500;color:var(--tiffany-deep)">${cnt}회</td>
+      <td><div class="stats-bar"><div class="stats-bar-fill" style="width:${pct}%"></div></div></td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+
+  const total = Object.values(state.assignments).filter(a => a && typeof a === 'object').length;
+  html += `<div class="helper" style="margin-top:12px;text-align:right">총 배정일: <strong>${total}일</strong></div>`;
+
+  container.innerHTML = html;
+}
+
+// ══════════════════════════════
+//  UTILS
+// ══════════════════════════════
+function dateKey(y, m, d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function weekKey(date) {
+  // ISO week: year + week number
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const wk1 = new Date(d.getFullYear(), 0, 4);
+  const wn = 1 + Math.round(((d - wk1) / 86400000 - 3 + (wk1.getDay() + 6) % 7) / 7);
+  return `${d.getFullYear()}-W${wn}`;
+}
+
+function biweekKey(date) {
+  // Group weeks into pairs (week 1&2, 3&4, ...)
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const wk1 = new Date(d.getFullYear(), 0, 4);
+  const wn = 1 + Math.round(((d - wk1) / 86400000 - 3 + (wk1.getDay() + 6) % 7) / 7);
+  const biweek = Math.ceil(wn / 2);
+  return `${d.getFullYear()}-BW${biweek}`;
+}
+
+// ══════════════════════════════
+//  IMPORT / EXPORT
+// ══════════════════════════════
+function openLookup() {
+  window.open('등교지도조회.html', '_blank');
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `등교지도_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function exportExcel() {
+  const assignments = state.assignments;
+  const allKeys = Object.keys(assignments)
+    .filter(k => assignments[k] && typeof assignments[k] === 'object')
+    .sort();
+
+  if (!allKeys.length) { alert('배정된 데이터가 없습니다.'); return; }
+
+  const DAY_KR = ['일','월','화','수','목','금','토'];
+  const wb = XLSX.utils.book_new();
+
+  // ── 시트1: 월별 달력형 배정표 ──
+  // 월별로 그룹핑
+  const byMonth = {};
+  allKeys.forEach(key => {
+    const [y, m] = key.split('-');
+    const mk = `${y}-${m}`;
+    if (!byMonth[mk]) byMonth[mk] = [];
+    byMonth[mk].push(key);
+  });
+
+  const calRows = [];
+  calRows.push(['날짜', '요일', '담임', '비담임']);
+
+  let prevMonth = '';
+  allKeys.forEach(key => {
+    const [y, m, d] = key.split('-').map(Number);
+    const mk = `${y}-${String(m).padStart(2,'0')}`;
+    const a = assignments[key];
+    const date = new Date(y, m-1, d);
+    const dow = DAY_KR[date.getDay()];
+
+    if (mk !== prevMonth) {
+      if (prevMonth) calRows.push(['', '', '', '']);
+      calRows.push([`${y}년 ${m}월`, '', '', '']);
+      prevMonth = mk;
+    }
+    calRows.push([`${m}/${d}`, dow, a.dam || '', a.bidam || '']);
+  });
+
+  const ws1 = XLSX.utils.aoa_to_sheet(calRows);
+  ws1['!cols'] = [{wch:8},{wch:5},{wch:10},{wch:10}];
+
+  // 헤더 스타일
+  ['A1','B1','C1','D1'].forEach(cell => {
+    if (ws1[cell]) ws1[cell].s = {
+      fill: {fgColor: {rgb: '0ABAB5'}},
+      font: {bold: true, color: {rgb: 'FFFFFF'}},
+      alignment: {horizontal: 'center'}
+    };
+  });
+  XLSX.utils.book_append_sheet(wb, ws1, '월별 배정표');
+
+  // ── 시트2: 교사별 횟수 집계 ──
+  const cnt = getCounts();
+  const cntRows = [['이름', '구분', '배정 횟수']];
+  const dams   = state.teachers.filter(t => t.type === '담임');
+  const bidams = state.teachers.filter(t => t.type === '비담임');
+  dams.forEach(t   => cntRows.push([t.name, '담임',   cnt[t.name] || 0]));
+  bidams.forEach(t => cntRows.push([t.name, '비담임', cnt[t.name] || 0]));
+
+  const ws2 = XLSX.utils.aoa_to_sheet(cntRows);
+  ws2['!cols'] = [{wch:10},{wch:8},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws2, '교사별 횟수');
+
+  // ── 시트3: 교사별 배정일 목록 ──
+  const teacherDates = {};
+  state.teachers.forEach(t => { teacherDates[t.name] = []; });
+  allKeys.forEach(key => {
+    const [y,m,d] = key.split('-').map(Number);
+    const a = assignments[key];
+    const label = `${m}/${d}(${DAY_KR[new Date(y,m-1,d).getDay()]})`;
+    if (a.dam   && teacherDates[a.dam])   teacherDates[a.dam].push(label);
+    if (a.bidam && teacherDates[a.bidam]) teacherDates[a.bidam].push(label);
+  });
+
+  const tdRows = [['이름', '구분', '배정 날짜 목록']];
+  [...dams, ...bidams].forEach(t => {
+    tdRows.push([t.name, t.type, teacherDates[t.name].join(', ')]);
+  });
+
+  const ws3 = XLSX.utils.aoa_to_sheet(tdRows);
+  ws3['!cols'] = [{wch:10},{wch:8},{wch:80}];
+  XLSX.utils.book_append_sheet(wb, ws3, '교사별 배정일');
+
+  // 파일명: 등교지도배정_YYYYMMDD.xlsx
+  const today = new Date();
+  const fname = `등교지도배정_${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}.xlsx`;
+  XLSX.writeFile(wb, fname);
+}
+
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      state = JSON.parse(e.target.result);
+      save();
+      renderTeachers();
+      renderCalendar();
+      alert('데이터를 불러왔습니다.');
+    } catch { alert('파일 형식이 올바르지 않습니다.'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function resetAll() {
+  localStorage.setItem(STORAGE_KEY + '_backup', JSON.stringify(state));
+  state = { teachers: [], assignments: {}, lastTeam: 'A', weekCount: 0, damBiweekUsed: [] };
+  save();
+  renderTeachers();
+  renderCalendar();
+  document.getElementById('restore-btn').style.display = 'flex';
+  document.getElementById('reset-notice').style.display = 'block';
+}
+
+function restoreAll() {
+  const raw = localStorage.getItem(STORAGE_KEY + '_backup');
+  if (!raw) { alert('복구할 데이터가 없습니다.'); return; }
+  try {
+    state = JSON.parse(raw);
+    save();
+    renderTeachers();
+    renderCalendar();
+    document.getElementById('restore-btn').style.display = 'none';
+    document.getElementById('reset-notice').style.display = 'none';
+  } catch { alert('복구 데이터가 손상되었습니다.'); }
+}
+
+// ══════════════════════════════
+//  INIT
+// ══════════════════════════════
+load();
+renderTeachers();
+renderCalendar();
+updateEqualizeBtn();
+</script>
+</body>
+</html>
